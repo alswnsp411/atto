@@ -1,7 +1,5 @@
 package com.example.atto;
 
-import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
@@ -19,12 +17,14 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 
 import com.bumptech.glide.Glide;
 import com.example.atto.database.AppDatabase;
+import com.example.atto.database.ProductBookmark;
+import com.example.atto.database.ProductBookmarkDao;
 import com.example.atto.database.ProductDao;
 import com.example.atto.database.ProductWithBrandName;
+import com.example.atto.database.UserDatabase;
 
 import java.util.List;
 
@@ -62,8 +62,13 @@ public class Fragment_myscrap_page_Activity extends Fragment {
 
         AppDatabase appDatabase = AppDatabase.getInstance(getActivity().getApplicationContext());
         ProductDao productDao = appDatabase.productDao();
-        List<ProductWithBrandName> productsWithBookmarked = productDao.findAllWhichBookmarked();
-        for(ProductWithBrandName product : productsWithBookmarked) {
+
+        UserDatabase userDatabase = UserDatabase.getInstance(getActivity().getApplicationContext());
+        ProductBookmarkDao productBookmarkDao = userDatabase.productBookmarkDao();
+        List<ProductBookmark> productBookmarks = productBookmarkDao.getAll();
+        for(ProductBookmark productBookmark : productBookmarks) {
+            ProductWithBrandName product = productDao.findById(productBookmark.productId);
+
             LinearLayout linearScrapElement = new LinearLayout(getActivity().getApplicationContext());
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             params.setMargins(70,40,30,40);
@@ -74,7 +79,7 @@ public class Fragment_myscrap_page_Activity extends Fragment {
                 public void onClick(View v) {
                     // 스크랩 pop up 페이지
                     String price = Integer.toString(product.price) ;
-                    dialog_scrap_popup = new Dialog_scrap_popup( getActivity(), product.id, product.photoURL, product.brandName, product.name, price, product.memo);
+                    dialog_scrap_popup = new Dialog_scrap_popup( getActivity(), product.id, product.photoURL, product.brandName, product.name, price, productBookmark.memo);
                     dialog_scrap_popup.show();
                 }
             });
@@ -137,7 +142,7 @@ public class Fragment_myscrap_page_Activity extends Fragment {
 
             //상품 메모
             TextView productMemo = new TextView(getActivity().getApplicationContext());
-            productMemo.setText(product.memo);
+            productMemo.setText(productBookmark.memo);
             productMemo.setGravity(Gravity.LEFT);
             productMemo.setMaxLines(2);  // 두 줄 출력
             productMemo.setEms(20);  // 한 줄에 글자 수
@@ -145,8 +150,7 @@ public class Fragment_myscrap_page_Activity extends Fragment {
             productMemo.setTextSize(18);
             productMemo.setPadding(0, 30, 0, 0);
             linearScrapElement.addView(productMemo);
-
-
+            
             linearLayout.addView(linearScrapElement);
 
             //수평선
